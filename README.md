@@ -60,34 +60,53 @@ db.pets.insert({name:"Frodo",species:"Hamster"})</code>
   - <code> db.italians.find ({$or: [{ $where: "this.cat && this.firstname == this.cat.name" }, { $where: "this.dog && this.firstname == this.dog.name" }]}).count() </code>
 
 - 10.Projete apenas o nome e sobrenomedas pessoas com tipo de sangue de fator RH negativo
-  - <code> db.italians.find({bloodType:/-/},{firstname:1,surname:1,_id:0}) </code>
+  - <code> db.italians.find({bloodType:/-/},{firstname:1, surname:1, _id:0}) </code>
 
 - 11.Projete apenas os animais dos italianos. Devem ser listados os animais com nome e idade. Não mostre o identificado do mongo (ObjectId)
-  - <code>  </code>
+  - <code> db.italians.find({$where: "this.cat && this.dog"}, {"cat.name":1, "cat.age":1, "dog.name":1, "dog.age":1, _id:0}) </code>
 
 - 12.Quais são as 5 pessoas mais velhas com sobrenome Rossi?
-  - <code>  </code>
+  - <code> db.italians.find({surname:"Rossi"}).sort({age:-1}).limit(5) </code>
 
 - 13.Crie um italiano que tenha um leão como animal de estimação. Associe um nome e idade ao bichano
-  - <code>  </code>
+  - <code> db.italians.insert({
+    firstname:"Pedro",
+    surname:"Di Paula",
+    username:"lasanha123",
+    age:37,
+    lion:{name:"simba", age:7}
+    }) </code>
 
 - 14.Infelizmente o Leão comeu o italiano. Remova essa pessoa usando o Id.
-  - <code>  </code>
+  - <code> db.italians.find({"lion": {$exists: true})
+    db.italians.remove("5e7a8797b59d369ea00ba376") </code>
 
 - 15.Passou um ano. Atualize a idade de todos os italianos e dos bichanos em 1.
-  - <code>  </code>
+  - <code> db.italians.update({}, {"$inc": {"age": 1}}, {multi: true}) 
+    db.italians.update({cat: {$exists: true}}, {$inc: {"cat.age": 1}}, {multi: true})
+    db.italians.update({dog: {$exists: true}}, {$inc: {"dog.age": 1}}, {multi: true})
+  </code>
 
 - 16.O Corona Vírus chegou na Itália e misteriosamente atingiu pessoas somente com gatos e de 66 anos. Remova esses italianos.
-  - <code>  </code>
+  - <code> db.italians.remove({$and:[{cat: {$exists: true}}, {age: 66}]}) </code>
 
 - 17.Utilizando o framework agregate, liste apenas as pessoas com nomes iguais a sua respectiva mãe e que tenha gato ou cachorro.
-  - <code>  </code>
+  - <code> db.italians.aggregate([    
+  {$match: { mother: { $exists: 1}}},     
+  {$match: { $or: [{ cat: { $exists: true }}, { dog: { $exists: true }}]}},     
+  {$project: { firstname:1, _id:0, sameNameWithMom: {$eq: ["$firstname","$mother.firstname"]}}},    
+  {$match: {sameNameWithMom: true}} ]) </code>
 
 - 18.Utilizando aggregate framework, faça uma lista de nomes única de nomes. Faça isso usando apenas o primeiro nome
-  - <code>  </code>
+  - <code> db.italians.aggregate([{$group: { _id: "$firstname"}}]) </code>
 
 - 19.Agora faça a mesma lista do item acima, considerando nome completo.
-  - <code>  </code>
+  - <code> db.italians.aggregate([{"$group": { "_id": { firstname: "$firstname", surname: "$surname" }}}]) </code>
 
 - 20.Procure pessoas que gosta de Banana ou Maçã, tenham cachorro ou gato, mais de 20 e menos de 60 anos.
-  - <code>  </code>
+  - <code> db.italians.aggregate([    
+{$match: { favFruits: {$all:["Banana", "Maçã"]}}},  
+{$match: { $or: [{ cat: { $exists: true }}, { dog: { $exists: true }}]}},
+{$match: { age: {$gt:20, $lt: 60}}},
+{$project: {firstname:1, _id:0}}
+]) </code>
