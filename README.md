@@ -110,3 +110,43 @@ db.pets.insert({name:"Frodo",species:"Hamster"})</code>
 {$match: { age: {$gt:20, $lt: 60}}},
 {$project: {firstname:1, _id:0}}
 ]) </code>
+
+Exercício3-Stockbrokers
+
+- 1.Liste as ações com profit acima de 0.5 (limite a 10 o resultado)
+  <code> db.stocks.find({"Profit Margin": {$gt: 0.5}}, {_id: 0, Ticker: 1, "Profit Margin": 1, "Company": 1}).limit(10) </code>
+  
+- 2.Liste as ações com perdas (limite a 10 novamente)
+  <code> db.stocks.find({"Profit Margin": {$lt: 0}}, {_id: 0, Ticker: 1, "Profit Margin": 1, "Company": 1}).limit(10) </code>
+  
+- 3.Liste as 10 ações mais rentáveis 
+  <code> db.stocks.find({"Profit Margin": {$exists: true}}, {_id: 0, Ticker: 1, "Profit Margin": 1, "Company": 1}).sort({"Profit Margin": -1}).limit(10) </code>
+  
+- 4.Qual foi o setor mais rentável?
+  <code> db.stocks.aggregate([{$group: {_id: "$Sector", "Total profits": {$sum: "$Profit Margin"} }}, {$sort: {"Total profits": -1}}]) </code>
+  
+- 5.Ordene as ações pelo profit e usando um cursor, liste as ações.
+  <code> var bigger_profit = db.stocks.find({"Profit Margin": {$exists: true}}, {_id: 0, Ticker: 1, "Profit Margin": 1, "Company": 1}) </code>
+  <code> bigger_profit = bigger_profit.sort({"Profit Margin": -1}) </code>
+  
+- 6.Renomeie o campo “Profit Margin” para apenas “profit”.
+  <code> db.stocks.update({"Profit Margin": { $exists: true }}, { $rename: {"Profit Margin": "Profit"}}, {multi: true}) </code>
+  
+- 7.Agora liste apenas a empresa e seu respectivo resultado
+  <code> db.stocks.find({"Profit": {$exists: true}}, {_id: 0, "Company": 1, "Profit": 1}) </code>
+  
+- 8.Analise as ações. É uma bola de cristal na sua mão... Quais as três ações você investiria?
+  - Escolhi as com melhores margem, desde que não estejam endividas demais hehe
+  <code> db.stocks.find({$and: [{"Profit": {$exists: true}}, {"Total Debt/Equity": {$lt: 3}}]}, {_id: 0, Ticker: 1, "Profit": 1, "Company": 1, "Total Debt/Equity": 1}).sort({"Profit": -1}).limit(3) </code>
+  
+- 9.Liste as ações agrupadas por setor
+  <code> db.stocks.aggregate([ {$group: {_id: "$Sector", items: { $addToSet: {Company: "$Company", Profit: "$Profit"}}}}]) </code>
+ 
+Exercício3 –FraudenaEnron!
+
+1.Liste as pessoas que enviaram e-mails (de forma distinta, ou seja, sem repetir). Quantas pessoas são?
+  - <code> var senders = db.enron.distinct("sender") </code>
+  - <code> senders.length </code>
+  
+2.Contabilize quantos e-mails tem a palavra “fraud”
+  - <code> db.enron.find({text: { $regex: ".fraud."}}).count() </code>
